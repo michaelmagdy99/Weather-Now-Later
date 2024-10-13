@@ -25,8 +25,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-
         locationPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
             if (isGranted) {
@@ -35,9 +33,7 @@ class MainActivity : ComponentActivity() {
                 Toast.makeText(this, "Location permission is required to access location.", Toast.LENGTH_SHORT).show()
             }
         }
-
         checkLocationPermission()
-
     }
 
     private fun checkLocationPermission() {
