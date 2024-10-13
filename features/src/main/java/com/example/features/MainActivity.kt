@@ -14,8 +14,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.navigation.compose.rememberNavController
 import com.example.core.ui.theme.WeatherNowLaterTheme
 import com.example.currentweather.view.CurrentWeatherScreen
+import com.example.features.navigation.AppNavHost
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -58,7 +60,8 @@ class MainActivity : ComponentActivity() {
         } else {
             setContent {
                 WeatherNowLaterTheme {
-                    CurrentWeatherScreen()
+                    val navController = rememberNavController()
+                    AppNavHost(navController = navController)
                 }
             }
         }
