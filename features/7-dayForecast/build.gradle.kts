@@ -3,10 +3,11 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     kotlin("kapt")
     id("dagger.hilt.android.plugin")
+
 }
 
 android {
-    namespace = "com.example.features"
+    namespace = "com.example.a7_dayforecast"
     compileSdk = 34
 
     defaultConfig {
@@ -32,17 +33,17 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.1"
+    }
+
     buildFeatures {
         compose = true
         viewBinding = true
         dataBinding = true
         buildConfig = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
-    }
-
-
 }
 
 dependencies {
@@ -57,7 +58,6 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":core"))
     implementation(project(":features:currentweather"))
-    implementation(project(":features:7-dayForecast"))
 
     // Coroutines for async handling
     implementation(libs.kotlinx.coroutines.core)
@@ -96,4 +96,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation (libs.androidx.hilt.navigation.compose)
     implementation (libs.androidx.lifecycle.viewmodel.compose)
+
 }

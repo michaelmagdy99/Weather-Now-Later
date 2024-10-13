@@ -4,22 +4,39 @@ import android.graphics.Typeface
 import android.location.Location
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.example.core.ui.compant.LoadingImage
 import com.example.core.ui.compant.ProgressBar
 import com.example.core.ui.compant.WeatherText
@@ -30,40 +47,58 @@ import com.example.currentweather.model.CurrentWeatherUIModel
 import com.example.currentweather.model.DailyForecastUIModel
 import com.example.currentweather.model.WeatherUIModel
 import com.example.currentweather.viewmodel.CurrentWeatherViewModel
+import com.example.currentweather.viewmodel.WeatherIntent
 
 @Composable
-fun CurrentWeatherScreen(viewModel: CurrentWeatherViewModel = viewModel()) {
-    val uiState = viewModel.uiState.collectAsState()
+fun CurrentWeatherScreen(
+    viewModel: CurrentWeatherViewModel = hiltViewModel(),
+    navController: NavController
+) {
+    val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.fetchWeather()
     }
 
-    when (val state = uiState.value) {
+    LaunchedEffect(Unit) {
+        viewModel.navigationEvent.collect { destination ->
+            navController.navigate(destination)
+        }
+    }
+
+    when (val state = uiState) {
         is UIState.Loading -> ProgressBar()
-        is UIState.Success -> WeatherDisplay(state.data)
+        is UIState.Success -> WeatherDisplay(
+            response = state.data,
+            onViewMoreClick = {
+                viewModel.handleIntent(WeatherIntent.NavigateToFullForecast)
+            }
+        )
         is UIState.Error -> BasicText("Error: ${state.message}")
     }
 }
 
 @Composable
-fun WeatherDisplay(response: WeatherUIModel?) {
+fun WeatherDisplay(
+    response: WeatherUIModel?,
+    onViewMoreClick: () -> Unit
+) {
     val location = Location("").apply {
         latitude = response?.lat ?: 0.0
         longitude = response?.long ?: 0.0
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {         
-        Image(
-            painter = painterResource(id = com.example.core.R.drawable.morning),
-            contentDescription = "Background Image",
-            modifier = Modifier.fillMaxSize()
-        )
-    }
-        
+    var searchQuery by remember { mutableStateOf("") }
 
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(Color(0xFF063970), Color(0xFF1E3A78)),
+                )
+            )
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -71,72 +106,90 @@ fun WeatherDisplay(response: WeatherUIModel?) {
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top,
-                modifier = Modifier.padding(top = 16.dp)
-            ) {
-                WeatherText(
-                    text = LocationUtils.getAddress(LocalContext.current, location),
-                    fontSize = 18.sp
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                WeatherText(
-                    text = "${Formatter.getDate(response?.current?.dt)} | ${Formatter.getFormattedHour(response?.current?.dt?.toLong())}",
-                    fontSize = 16.sp
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                WeatherText(
-                    text = response?.current?.condition ?: "Unknown",
-                    fontSize = 16.sp,
-                    fontFamily = FontFamily(Typeface.DEFAULT)
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                WeatherText(
-                    text = response?.current?.temperature ?: "--",
-                    fontSize = 48.sp
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                response?.current?.icon?.let {
-                    Formatter.getWeatherImage(
-                        it
-                    )
-                }?.let { painterResource(it) }?.let {
-                    Image(
-                        painter = it,
-                        contentDescription = "",
-                        modifier = Modifier.size(110.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-
-                AdditionalWeatherInfo(response?.current)
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                response?.dailyForecasts?.let {
-                    DailyForecastSection(it)
-                }
-            }
+            SearchTextField(searchQuery) { searchQuery = it }
+            Spacer(modifier = Modifier.height(8.dp))
+            WeatherInfo(location, response)
+            Spacer(modifier = Modifier.height(16.dp))
+            response?.dailyForecasts?.let { DailyForecastSection(it, onViewMoreClick) }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SearchTextField(searchQuery: String, onQueryChange: (String) -> Unit) {
+    TextField(
+        value = searchQuery,
+        onValueChange = onQueryChange,
+        placeholder = { Text("Search...") },
+        leadingIcon = {
+            Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon")
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        singleLine = true,
+        shape = MaterialTheme.shapes.medium,
+        colors = TextFieldDefaults.textFieldColors(
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent
+        )
+    )
 }
 
 @Composable
-fun DailyForecastSection(forecasts: List<DailyForecastUIModel>) {
-    LazyColumn(
+fun WeatherInfo(location: Location, response: WeatherUIModel?) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top,
+    ) {
+        WeatherText(text = LocationUtils.getAddress(LocalContext.current, location), fontSize = 18.sp)
+        Spacer(modifier = Modifier.height(8.dp))
+        WeatherText(text = "${Formatter.getDate(response?.current?.dt)} | ${Formatter.getFormattedHour(response?.current?.dt?.toLong())}", fontSize = 16.sp)
+        Spacer(modifier = Modifier.height(8.dp))
+        WeatherText(text = response?.current?.condition ?: "Unknown", fontSize = 16.sp)
+        Spacer(modifier = Modifier.height(8.dp))
+        WeatherText(text = response?.current?.temperature ?: "--", fontSize = 48.sp)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        response?.current?.icon?.let {
+            Formatter.getWeatherImage(it)?.let { iconRes ->
+                Image(painter = painterResource(iconRes), contentDescription = "", modifier = Modifier.size(110.dp))
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        AdditionalWeatherInfo(response?.current)
+    }
+}
+
+@Composable
+fun DailyForecastSection(
+    forecasts: List<DailyForecastUIModel>,
+    onViewMoreClick: () -> Unit
+) {
+    Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(forecasts) { forecast ->
-            DailyForecastItem(forecast)
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(forecasts.take(3)) { forecast ->
+                DailyForecastItem(forecast)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = onViewMoreClick,
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+        ) {
+            Text(text = "7-Day Forecast")
         }
     }
 }
@@ -150,45 +203,26 @@ fun DailyForecastItem(forecast: DailyForecastUIModel) {
             .padding(8.dp)
             .fillMaxWidth()
     ) {
-        forecast.icon.let {
-            Formatter.getWeatherImage(
-                it
-            )
-        }.let { painterResource(it) }.let {
-            Image(
-                painter = it,
-                contentDescription = "",
-                modifier = Modifier.size(40.dp)
-            )
+        forecast.icon?.let {
+            Formatter.getWeatherImage(it)?.let { iconRes ->
+                Image(
+                    painter = painterResource(iconRes),
+                    contentDescription = "",
+                    modifier = Modifier.size(40.dp)
+                )
+            }
         }
         Spacer(modifier = Modifier.weight(1f))
 
-        WeatherText(
-                text = forecast.date,
-                fontSize = 14.sp,
-                fontFamily = FontFamily(Typeface.DEFAULT)
-            )
+        WeatherText(text = forecast.date, fontSize = 14.sp)
         Spacer(modifier = Modifier.weight(1f))
 
-        WeatherText(
-                text = forecast.weatherCondition,
-                fontSize = 14.sp,
-                fontFamily = FontFamily(Typeface.DEFAULT)
-            )
-
+        WeatherText(text = forecast.weatherCondition, fontSize = 14.sp)
         Spacer(modifier = Modifier.weight(1f))
 
-        Row{
-            WeatherText(
-                text = "${forecast.temperature.min} / ",
-                fontSize = 12.sp,
-                fontFamily = FontFamily(Typeface.DEFAULT)
-            )
-            WeatherText(
-                text = forecast.temperature.max,
-                fontSize = 12.sp,
-                fontFamily = FontFamily(Typeface.DEFAULT)
-            )
+        Row {
+            WeatherText(text = "${forecast.temperature.min} / ", fontSize = 12.sp)
+            WeatherText(text = forecast.temperature.max, fontSize = 12.sp)
         }
     }
 }
@@ -220,21 +254,7 @@ fun WeatherInfoItem(@DrawableRes iconRes: Int, value: String, label: String) {
             modifier = Modifier.size(40.dp)
         )
         Spacer(modifier = Modifier.height(4.dp))
-        WeatherText(
-            text = value,
-            fontSize = 14.sp,
-            fontFamily = FontFamily(Typeface.DEFAULT)
-        )
-        WeatherText(
-            text = label,
-            fontSize = 12.sp,
-            fontFamily = FontFamily(Typeface.DEFAULT)
-        )
+        WeatherText(text = value, fontSize = 14.sp)
+        WeatherText(text = label, fontSize = 12.sp)
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewCurrentWeatherScreen() {
-    CurrentWeatherScreen()
 }
