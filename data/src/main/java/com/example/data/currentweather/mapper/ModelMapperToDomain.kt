@@ -14,7 +14,9 @@ fun WeatherResponse.toDomain(): WeatherDomainModel {
     return WeatherDomainModel(
         current = current?.toDomain(),
         dailyForecasts = daily?.map { it!!.toDomain() } ?: emptyList(),
-        alerts = alerts?.map { it!!.toDomain() } ?: emptyList()
+        alerts = alerts?.map { it!!.toDomain() } ?: emptyList(),
+        lat = lat,
+        long = lon,
     )
 }
 
@@ -22,7 +24,13 @@ fun Current.toDomain(): CurrentWeatherDomainModel {
     return CurrentWeatherDomainModel(
         temperature = temp ?: 0.0,
         condition = weather?.firstOrNull()?.description ?: "Unknown",
-        icon = weather?.firstOrNull()?.icon ?: ""
+        icon = weather?.firstOrNull()?.icon ?: "",
+        dt = dt,
+        clouds = clouds,
+        humidity = humidity,
+        windSpeed = windSpeed,
+        visibility =visibility
+
     )
 }
 
