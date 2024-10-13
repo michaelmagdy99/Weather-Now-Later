@@ -45,6 +45,7 @@ import androidx.navigation.NavController
 import com.example.core.ui.compant.LoadingImage
 import com.example.core.ui.compant.ProgressBar
 import com.example.core.ui.compant.WeatherText
+import com.example.core.ui.theme.WeatherNowLaterTheme
 import com.example.core.uistate.UIState
 import com.example.core.utilites.Formatter
 import com.example.core.utilites.LocationUtils
@@ -59,27 +60,31 @@ fun CurrentWeatherScreen(
     viewModel: CurrentWeatherViewModel = hiltViewModel(),
     navController: NavController
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    WeatherNowLaterTheme {
 
-    LaunchedEffect(Unit) {
-        viewModel.fetchWeather()
-    }
+        val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(Unit) {
-        viewModel.navigationEvent.collect { destination ->
-            navController.navigate(destination)
+        LaunchedEffect(Unit) {
+            viewModel.fetchWeather()
         }
-    }
 
-    when (val state = uiState) {
-        is UIState.Loading -> ProgressBar()
-        is UIState.Success -> WeatherDisplay(
-            response = state.data,
-            onViewMoreClick = {
-                viewModel.handleIntent(WeatherIntent.NavigateToFullForecast)
+        LaunchedEffect(Unit) {
+            viewModel.navigationEvent.collect { destination ->
+                navController.navigate(destination)
             }
-        )
-        is UIState.Error -> BasicText("Error: ${state.message}")
+        }
+
+        when (val state = uiState) {
+            is UIState.Loading -> ProgressBar()
+            is UIState.Success -> WeatherDisplay(
+                response = state.data,
+                onViewMoreClick = {
+                    viewModel.handleIntent(WeatherIntent.NavigateToFullForecast)
+                }
+            )
+
+            is UIState.Error -> BasicText("Error: ${state.message}")
+        }
     }
 }
 
@@ -89,6 +94,10 @@ fun WeatherDisplay(
     onViewMoreClick: () -> Unit,
     viewModel: CurrentWeatherViewModel = hiltViewModel()
 ) {
+
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val textColor = MaterialTheme.colorScheme.onBackground
+
     val location = Location("").apply {
         latitude = response?.lat ?: 0.0
         longitude = response?.long ?: 0.0
@@ -101,7 +110,7 @@ fun WeatherDisplay(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color(0xFF063970), Color(0xFF1E3A78)),
+                    colors = listOf(backgroundColor, MaterialTheme.colorScheme.primary),
                 )
             )
     ) {
@@ -120,9 +129,9 @@ fun WeatherDisplay(
                 }
             )
             Spacer(modifier = Modifier.height(8.dp))
-            WeatherInfo(location, response)
+            WeatherInfo(location, response, textColor)
             Spacer(modifier = Modifier.height(16.dp))
-            response?.dailyForecasts?.let { DailyForecastSection(it, onViewMoreClick) }
+            response?.dailyForecasts?.let { DailyForecastSection(it, onViewMoreClick, textColor) }
         }
     }
 }
@@ -167,18 +176,18 @@ fun SearchTextField(
 
 
 @Composable
-fun WeatherInfo(location: Location, response: WeatherUIModel?) {
+fun WeatherInfo(location: Location, response: WeatherUIModel?, textColor: Color) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
     ) {
-        WeatherText(text = LocationUtils.getAddress(LocalContext.current, location), fontSize = 18.sp)
+        WeatherText(text = LocationUtils.getAddress(LocalContext.current, location), fontSize = 18.sp, color = textColor)
         Spacer(modifier = Modifier.height(8.dp))
-        WeatherText(text = "${Formatter.getDate(response?.current?.dt)} | ${Formatter.getFormattedHour(response?.current?.dt?.toLong())}", fontSize = 16.sp)
+        WeatherText(text = "${Formatter.getDate(response?.current?.dt)} | ${Formatter.getFormattedHour(response?.current?.dt?.toLong())}", fontSize = 16.sp, color = textColor)
         Spacer(modifier = Modifier.height(8.dp))
-        WeatherText(text = response?.current?.condition ?: "Unknown", fontSize = 16.sp)
+        WeatherText(text = response?.current?.condition ?: "Unknown", fontSize = 16.sp, color = textColor)
         Spacer(modifier = Modifier.height(8.dp))
-        WeatherText(text = response?.current?.temperature ?: "--", fontSize = 48.sp)
+        WeatherText(text = response?.current?.temperature ?: "--", fontSize = 48.sp, color = textColor)
         Spacer(modifier = Modifier.height(16.dp))
 
         response?.current?.icon?.let {
@@ -187,14 +196,15 @@ fun WeatherInfo(location: Location, response: WeatherUIModel?) {
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        AdditionalWeatherInfo(response?.current)
+        AdditionalWeatherInfo(response?.current, textColor = textColor)
     }
 }
 
 @Composable
 fun DailyForecastSection(
     forecasts: List<DailyForecastUIModel>,
-    onViewMoreClick: () -> Unit
+    onViewMoreClick: () -> Unit,
+    textColor: Color
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -205,7 +215,7 @@ fun DailyForecastSection(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(forecasts.take(3)) { forecast ->
-                DailyForecastItem(forecast)
+                DailyForecastItem(forecast, textColor = textColor)
             }
         }
 
@@ -224,7 +234,7 @@ fun DailyForecastSection(
 }
 
 @Composable
-fun DailyForecastItem(forecast: DailyForecastUIModel) {
+fun DailyForecastItem(forecast: DailyForecastUIModel, textColor: Color) {
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
@@ -243,36 +253,36 @@ fun DailyForecastItem(forecast: DailyForecastUIModel) {
         }
         Spacer(modifier = Modifier.weight(1f))
 
-        WeatherText(text = forecast.date, fontSize = 14.sp)
+        WeatherText(text = forecast.date, fontSize = 14.sp, color = textColor)
         Spacer(modifier = Modifier.weight(1f))
 
-        WeatherText(text = forecast.weatherCondition, fontSize = 14.sp)
+        WeatherText(text = forecast.weatherCondition, fontSize = 14.sp, color = textColor)
         Spacer(modifier = Modifier.weight(1f))
 
         Row {
-            WeatherText(text = "${forecast.temperature.min} / ", fontSize = 12.sp)
-            WeatherText(text = forecast.temperature.max, fontSize = 12.sp)
+            WeatherText(text = "${forecast.temperature.min} / ", fontSize = 12.sp, color = textColor)
+            WeatherText(text = forecast.temperature.max, fontSize = 12.sp, color = textColor)
         }
     }
 }
 
 @Composable
-fun AdditionalWeatherInfo(weather: CurrentWeatherUIModel?) {
+fun AdditionalWeatherInfo(weather: CurrentWeatherUIModel?, textColor: Color) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 16.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        WeatherInfoItem(iconRes = com.example.core.R.drawable.cloudy_icon, value = "${weather?.clouds ?: 0} %", label = "Clouds")
-        WeatherInfoItem(iconRes = com.example.core.R.drawable.humidity_icon, value = "${weather?.humidity ?: 0} %", label = "Humidity")
-        WeatherInfoItem(iconRes = com.example.core.R.drawable.wind_icon, value = "${weather?.windSpeed ?: 0} m/s", label = "Wind Speed")
-        WeatherInfoItem(iconRes = com.example.core.R.drawable.visibility, value = "${weather?.visibility ?: 0} m", label = "Visibility")
+        WeatherInfoItem(iconRes = com.example.core.R.drawable.cloudy_icon, value = "${weather?.clouds ?: 0} %", label = "Clouds", textColor = textColor)
+        WeatherInfoItem(iconRes = com.example.core.R.drawable.humidity_icon, value = "${weather?.humidity ?: 0} %", label = "Humidity", textColor = textColor)
+        WeatherInfoItem(iconRes = com.example.core.R.drawable.wind_icon, value = "${weather?.windSpeed ?: 0} m/s", label = "Wind Speed", textColor = textColor)
+        WeatherInfoItem(iconRes = com.example.core.R.drawable.visibility, value = "${weather?.visibility ?: 0} m", label = "Visibility", textColor = textColor)
     }
 }
 
 @Composable
-fun WeatherInfoItem(@DrawableRes iconRes: Int, value: String, label: String) {
+fun WeatherInfoItem(@DrawableRes iconRes: Int, value: String, label: String, textColor: Color) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(8.dp)
@@ -283,7 +293,7 @@ fun WeatherInfoItem(@DrawableRes iconRes: Int, value: String, label: String) {
             modifier = Modifier.size(40.dp)
         )
         Spacer(modifier = Modifier.height(4.dp))
-        WeatherText(text = value, fontSize = 14.sp)
-        WeatherText(text = label, fontSize = 12.sp)
+        WeatherText(text = value, fontSize = 14.sp, color = textColor)
+        WeatherText(text = label, fontSize = 12.sp, color = textColor)
     }
 }

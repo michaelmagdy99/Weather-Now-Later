@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,6 +29,9 @@ fun FullForecastScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val textColor = MaterialTheme.colorScheme.onBackground
+
     LaunchedEffect(Unit) {
         viewModel.fetchWeather()
     }
@@ -37,7 +41,7 @@ fun FullForecastScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color(0xFF063970), Color(0xFF1E3A78)),
+                    colors = listOf(backgroundColor, MaterialTheme.colorScheme.primary),
                 )
             ).padding(16.dp)
     ) {
@@ -51,7 +55,7 @@ fun FullForecastScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(data) { forecast ->
-                        DailyForecastItem(forecast)
+                        DailyForecastItem(forecast, textColor)
                     }
                 }
             }
