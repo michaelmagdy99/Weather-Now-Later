@@ -20,4 +20,15 @@ class CurrentWeatherRepo @Inject constructor(
         val weatherResponse = currentWeatherRemoteDataSource.getCurrentWeather(lat, lon, appId, lang, units)
         return weatherResponse.toDomain()
     }
+
+
+    override suspend fun getWeatherForCity(
+        cityName : String,
+        appId: String,
+        lang: String,
+        units: String
+    ): WeatherDomainModel {
+        val weatherResponse = currentWeatherRemoteDataSource.getWeatherCity(cityName, appId, lang, units)
+        return weatherResponse.toDomain()
+    }
 }

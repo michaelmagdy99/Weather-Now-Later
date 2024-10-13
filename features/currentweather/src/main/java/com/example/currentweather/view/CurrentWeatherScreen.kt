@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
@@ -29,9 +30,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -81,7 +86,8 @@ fun CurrentWeatherScreen(
 @Composable
 fun WeatherDisplay(
     response: WeatherUIModel?,
-    onViewMoreClick: () -> Unit
+    onViewMoreClick: () -> Unit,
+    viewModel: CurrentWeatherViewModel = hiltViewModel()
 ) {
     val location = Location("").apply {
         latitude = response?.lat ?: 0.0
@@ -106,7 +112,13 @@ fun WeatherDisplay(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            SearchTextField(searchQuery) { searchQuery = it }
+            SearchTextField(
+                searchQuery = searchQuery,
+                onQueryChange = { searchQuery = it },
+                onSearchSubmit = {
+                    viewModel.fetchWeatherForCity(searchQuery)
+                }
+            )
             Spacer(modifier = Modifier.height(8.dp))
             WeatherInfo(location, response)
             Spacer(modifier = Modifier.height(16.dp))
@@ -117,7 +129,11 @@ fun WeatherDisplay(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchTextField(searchQuery: String, onQueryChange: (String) -> Unit) {
+fun SearchTextField(
+    searchQuery: String,
+    onQueryChange: (String) -> Unit,
+    onSearchSubmit: () -> Unit
+) {
     TextField(
         value = searchQuery,
         onValueChange = onQueryChange,
@@ -127,15 +143,28 @@ fun SearchTextField(searchQuery: String, onQueryChange: (String) -> Unit) {
         },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(16.dp)
+            .onKeyEvent { keyEvent ->
+                if (keyEvent.key == Key.Enter) {
+                    onSearchSubmit()
+                    true
+                } else {
+                    false
+                }
+            },
         singleLine = true,
         shape = MaterialTheme.shapes.medium,
         colors = TextFieldDefaults.textFieldColors(
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent
+        ),
+        keyboardOptions = KeyboardOptions.Default.copy(
+            imeAction = ImeAction.Search
         )
     )
 }
+
+
 
 @Composable
 fun WeatherInfo(location: Location, response: WeatherUIModel?) {

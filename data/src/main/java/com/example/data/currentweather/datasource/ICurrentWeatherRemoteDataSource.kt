@@ -4,4 +4,10 @@ import com.example.data.currentweather.model.WeatherResponse
 
 interface ICurrentWeatherRemoteDataSource {
     suspend fun getCurrentWeather(lat: Double, lon: Double, appId:String, lang:String, units:String): WeatherResponse
+    suspend fun getWeatherCity(
+        cityName: String,
+        appId: String,
+        lang: String,
+        units: String
+    ): WeatherResponse
 }

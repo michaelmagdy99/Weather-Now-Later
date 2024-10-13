@@ -17,4 +17,12 @@ class CurrentWeatherRemoteDataSource @Inject constructor(
        return currentWeatherRemoteDataSource.getCurrentWeather(lat, lon, appId, lang, units)
     }
 
+    override suspend fun getWeatherCity(
+        cityName: String,
+        appId: String,
+        lang: String,
+        units: String
+    ): WeatherResponse {
+        return currentWeatherRemoteDataSource.getWeatherForCity(cityName, appId, lang, units)
+    }
 }

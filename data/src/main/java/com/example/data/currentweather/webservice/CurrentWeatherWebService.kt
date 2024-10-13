@@ -12,4 +12,12 @@ interface CurrentWeatherWebService {
                                   @Query("appid") appId:String,
                                   @Query("lang") lang:String,
                                   @Query("units") units:String): WeatherResponse
+
+
+    @GET("onecall?")
+    suspend fun getWeatherForCity( @Query("appid") appId:String,
+                                  @Query("lang") lang:String,
+                                  @Query("units") units:String,
+                                  @Query("q") cityName:String): WeatherResponse
+
 }
