@@ -3,7 +3,12 @@ package com.example.currentweather.model
 data class CurrentWeatherUIModel(
     val temperature: String,
     val condition: String,
-    val icon: String
+    val icon: String,
+    val dt: Int?,
+    val clouds: Int?,
+    val humidity: Int?,
+    val windSpeed: Int?,
+    val visibility: Int?
 )
 
 data class DailyForecastUIModel(
@@ -29,5 +34,7 @@ data class AlertUIModel(
 data class WeatherUIModel(
     val current: CurrentWeatherUIModel?,
     val dailyForecasts: List<DailyForecastUIModel>,
-    val alerts: List<AlertUIModel>
+    val alerts: List<AlertUIModel>,
+    val long: Double?,
+    val lat: Double?,
 )

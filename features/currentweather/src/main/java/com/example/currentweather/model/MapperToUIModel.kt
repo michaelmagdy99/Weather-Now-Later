@@ -12,15 +12,22 @@ fun WeatherDomainModel.toUI(): WeatherUIModel {
     return WeatherUIModel(
         current = current?.toUI(),
         dailyForecasts = dailyForecasts.map { it.toUI() },
-        alerts = alerts.map { it.toUI() }
+        alerts = alerts.map { it.toUI() },
+        lat = lat,
+        long = long,
     )
 }
 
 fun CurrentWeatherDomainModel.toUI(): CurrentWeatherUIModel {
     return CurrentWeatherUIModel(
-        temperature = "$temperature °C",
+        temperature = "${temperature.toInt()} °C",
         condition = condition,
-        icon = icon
+        icon = icon,
+        dt = dt,
+        clouds = clouds,
+        humidity = humidity,
+        windSpeed = windSpeed,
+        visibility =visibility
     )
 }
 
@@ -28,8 +35,8 @@ fun DailyForecastDomainModel.toUI(): DailyForecastUIModel {
     return DailyForecastUIModel(
         date = convertTimestampToDateString(date),
         temperature = TemperatureUIModel(
-            min = "${temperature.min} °C",
-            max = "${temperature.max} °C"
+            min = "${temperature.min.toInt()} °C",
+            max = "${temperature.max.toInt()} °C"
         ),
         weatherCondition = weatherCondition,
         icon = icon

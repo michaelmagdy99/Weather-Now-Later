@@ -3,7 +3,12 @@ package com.example.domain.currentweather.model
 data class CurrentWeatherDomainModel(
     val temperature: Double,
     val condition: String,
-    val icon: String
+    val icon: String,
+    val dt: Int?,
+    val clouds: Int?,
+    val humidity: Int?,
+    val windSpeed: Int?,
+    val visibility: Int?
 )
 
 data class DailyForecastDomainModel(
@@ -29,5 +34,6 @@ data class AlertDomainModel(
 data class WeatherDomainModel(
     val current: CurrentWeatherDomainModel?,
     val dailyForecasts: List<DailyForecastDomainModel>,
-    val alerts: List<AlertDomainModel>
+    val alerts: List<AlertDomainModel>,
+    val lat: Double?, val long: Double?
 )
