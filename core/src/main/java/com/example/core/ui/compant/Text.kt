@@ -14,13 +14,14 @@ fun WeatherText(
     text: String,
     fontSize: TextUnit,
     fontStyle: FontStyle = FontStyle.Normal,
-    fontFamily: FontFamily = FontFamily(Typeface.DEFAULT_BOLD)
+    fontFamily: FontFamily = FontFamily(Typeface.DEFAULT_BOLD),
+    color: Color = Color.White
 ) {
     Text(
         text = text,
         fontSize = fontSize,
         fontStyle = fontStyle,
         fontFamily = fontFamily,
-        color = Color.White
+        color = color
     )
 }
