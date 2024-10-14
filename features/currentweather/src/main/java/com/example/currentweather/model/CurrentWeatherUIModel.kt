@@ -35,6 +35,6 @@ data class WeatherUIModel(
     val current: CurrentWeatherUIModel?,
     val dailyForecasts: List<DailyForecastUIModel>,
     val alerts: List<AlertUIModel>,
-    val long: Double?,
+    val lon: Double?,
     val lat: Double?,
 )
