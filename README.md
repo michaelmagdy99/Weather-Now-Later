@@ -5,7 +5,7 @@ A modularized Android application that fetches and displays current weather as w
 ## Features
 
 - **City Input**: Allow users to input a city name.
-- **Current Weather Display**: Shows the current weather, including temperature, condition (e.g., cloudy, sunny, rainy), and an appropriate icon.
+- **Current Weather Display**: Shows the current weather, including temperature, condition
 - **7-Day Forecast**: Displays a 7-day weather forecast in a list format.
 
 ## Technical Requirements
@@ -41,7 +41,6 @@ The application is structured into the following modules:
 
 ### Unit Testing
 
-- Achieved over 80% code coverage with unit tests.
 - Utilized a mocking framework for testing.
 
 ### CI/CD
