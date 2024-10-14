@@ -26,11 +26,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
 }
 
@@ -79,4 +79,12 @@ dependencies {
     implementation(libs.play.services.location)
     implementation (libs.play.services.maps)
     implementation (libs.kotlinx.coroutines.play.services)
+    // JUnit for testing
+    testImplementation (libs.junit)
+    // Mockito for mocking
+    testImplementation (libs.mockito.core.v451)
+    // Mockito Kotlin extension for easier usage
+    testImplementation (libs.mockito.kotlin)
+    // Coroutine test support
+    testImplementation (libs.kotlinx.coroutines.test.v160)
 }

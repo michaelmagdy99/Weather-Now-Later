@@ -14,7 +14,7 @@ fun WeatherDomainModel.toUI(): WeatherUIModel {
         dailyForecasts = dailyForecasts.map { it.toUI() },
         alerts = alerts.map { it.toUI() },
         lat = lat,
-        long = long,
+        lon = long,
     )
 }
 

@@ -1,6 +1,5 @@
 package com.example.currentweather.view
 
-import android.graphics.Typeface
 import android.location.Location
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -35,14 +34,11 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.core.ui.compant.LoadingImage
 import com.example.core.ui.compant.ProgressBar
 import com.example.core.ui.compant.WeatherText
 import com.example.core.ui.theme.WeatherNowLaterTheme
@@ -100,7 +96,7 @@ fun WeatherDisplay(
 
     val location = Location("").apply {
         latitude = response?.lat ?: 0.0
-        longitude = response?.long ?: 0.0
+        longitude = response?.lon ?: 0.0
     }
 
     var searchQuery by remember { mutableStateOf("") }
@@ -114,27 +110,44 @@ fun WeatherDisplay(
                 )
             )
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            SearchTextField(
-                searchQuery = searchQuery,
-                onQueryChange = { searchQuery = it },
-                onSearchSubmit = {
-                    viewModel.fetchWeatherForCity(searchQuery)
+            item {
+                SearchTextField(
+                    searchQuery = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    onSearchSubmit = {
+                        viewModel.fetchWeatherForCity(searchQuery)
+                    }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                WeatherInfo(location, response, textColor)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            response?.dailyForecasts?.let { forecasts ->
+                items(forecasts.take(3)) { forecast ->
+                    DailyForecastItem(forecast, textColor = textColor)
                 }
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            WeatherInfo(location, response, textColor)
-            Spacer(modifier = Modifier.height(16.dp))
-            response?.dailyForecasts?.let { DailyForecastSection(it, onViewMoreClick, textColor) }
+            }
+
+            item {
+                Button(
+                    onClick = onViewMoreClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                ) {
+                    Text(text = "7-Day Forecast")
+                }
+            }
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
