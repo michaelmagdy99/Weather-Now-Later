@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
@@ -29,9 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
@@ -165,15 +163,8 @@ fun SearchTextField(
         },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
-            .onKeyEvent { keyEvent ->
-                if (keyEvent.key == Key.Enter) {
-                    onSearchSubmit()
-                    true
-                } else {
-                    false
-                }
-            },
+            .padding(16.dp),
+
         singleLine = true,
         shape = MaterialTheme.shapes.medium,
         colors = TextFieldDefaults.textFieldColors(
@@ -182,6 +173,11 @@ fun SearchTextField(
         ),
         keyboardOptions = KeyboardOptions.Default.copy(
             imeAction = ImeAction.Search
+        ),
+        keyboardActions = KeyboardActions(
+            onSearch = {
+                onSearchSubmit()
+            }
         )
     )
 }
@@ -213,38 +209,6 @@ fun WeatherInfo(location: Location, response: WeatherUIModel?, textColor: Color)
     }
 }
 
-@Composable
-fun DailyForecastSection(
-    forecasts: List<DailyForecastUIModel>,
-    onViewMoreClick: () -> Unit,
-    textColor: Color
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(forecasts.take(3)) { forecast ->
-                DailyForecastItem(forecast, textColor = textColor)
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = onViewMoreClick,
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-        ) {
-            Text(text = "7-Day Forecast")
-        }
-    }
-}
 
 @Composable
 fun DailyForecastItem(forecast: DailyForecastUIModel, textColor: Color) {
