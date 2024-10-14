@@ -112,5 +112,7 @@ dependencies {
     testImplementation (libs.mockito.kotlin)
     // Coroutine test support
     testImplementation (libs.kotlinx.coroutines.test.v160)
+    testImplementation (libs.androidx.core.testing)
+
 
 }
